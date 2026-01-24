@@ -4,7 +4,7 @@ import { WaitlistForm } from "./components/WaitlistForm";
 import { AdminLogin } from "./components/AdminLogin";
 import { AdminDashboard } from "./components/AdminDashboard";
 import { Shield } from "lucide-react";
-import kyozoLogo from "figma:asset/da66afec8308d820a80087d80cf52148e60777e5.png";
+import kyozoLogo from "/logo.png";
 
 interface FormSubmission {
   id: string;
