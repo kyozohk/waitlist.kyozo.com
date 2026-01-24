@@ -18,8 +18,7 @@ export function AdminLogin({ onAuthenticate, onCancel }: AdminLoginProps) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // TODO: Replace with actual password validation
-    const ADMIN_PASSWORD = "kyozo2026admin";
+    const ADMIN_PASSWORD = process.env.NEXT_PUBLIC_ADMIN_PASSWORD || "kyozo2026admin";
     
     if (password === ADMIN_PASSWORD) {
       onAuthenticate();

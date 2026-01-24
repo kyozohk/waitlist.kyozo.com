@@ -37,6 +37,20 @@ interface FormData {
   communitySelections: string[]; // ["asia", "willer"] or combinations
 }
 
+interface FormErrors {
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+  phone?: string;
+  location?: string;
+  roleTypes?: string;
+  creativeWork?: string;
+  betaTesting?: string;
+  resonanceLevel?: string;
+  resonanceReasons?: string;
+  communitySelections?: string;
+}
+
 const TOTAL_STEPS = 6;
 
 interface WaitlistFormProps {
@@ -47,7 +61,7 @@ export function WaitlistForm({ onSubmit }: WaitlistFormProps) {
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [direction, setDirection] = useState(0);
-  const [errors, setErrors] = useState<Partial<FormData>>({});
+  const [errors, setErrors] = useState<FormErrors>({});
   const [showLandingPage, setShowLandingPage] = useState(true);
   const [passcode, setPasscode] = useState("");
   const [passcodeError, setPasscodeError] = useState("");
@@ -190,7 +204,7 @@ export function WaitlistForm({ onSubmit }: WaitlistFormProps) {
   };
 
   const validateStep = (step: number): boolean => {
-    const newErrors: Partial<FormData> = {};
+    const newErrors: FormErrors = {};
 
     switch (step) {
       case 1:
@@ -282,22 +296,20 @@ export function WaitlistForm({ onSubmit }: WaitlistFormProps) {
       const docId = await saveWaitlistSubmission(submissionData);
       console.log('Submission saved with ID:', docId);
 
-      // TODO: Implement email notifications with serverless functions (Netlify/Vercel)
-      // Email sending requires a backend API - currently disabled for client-only Vite app
-      // try {
-      //   await sendNewSubmissionNotification({
-      //     firstName: formData.firstName,
-      //     lastName: formData.lastName,
-      //     email: formData.email,
-      //     phone: formData.phone,
-      //     location: formData.location,
-      //     roleTypes: formData.roleTypes,
-      //     creativeWork: formData.creativeWork,
-      //     segments: [],
-      //   });
-      // } catch (emailError) {
-      //   console.error('Failed to send notification email:', emailError);
-      // }
+      try {
+        await sendNewSubmissionNotification({
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          email: formData.email,
+          phone: formData.phone,
+          location: formData.location,
+          roleTypes: formData.roleTypes,
+          creativeWork: formData.creativeWork,
+          segments: [],
+        });
+      } catch (emailError) {
+        console.error('Failed to send notification email:', emailError);
+      }
 
       const submission = {
         id: docId,
@@ -314,8 +326,7 @@ export function WaitlistForm({ onSubmit }: WaitlistFormProps) {
   };
 
   const handlePasscodeSubmit = () => {
-    // TODO: Replace with actual passcode validation
-    const VALID_PASSCODE = "KYOZO2026";
+    const VALID_PASSCODE = process.env.NEXT_PUBLIC_USER_PASSWORD || "KYOZO2026";
     
     if (passcode.trim().toUpperCase() === VALID_PASSCODE) {
       setShowLandingPage(false);

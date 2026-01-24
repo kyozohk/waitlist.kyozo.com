@@ -1,11 +1,12 @@
+'use client';
+
 import { motion } from "motion/react";
 import { useState } from "react";
-import { Routes, Route } from "react-router-dom";
 import { WaitlistForm } from "./components/WaitlistForm";
 import { AdminLogin } from "./components/AdminLogin";
 import { AdminDashboard } from "./components/AdminDashboard";
 import { Shield } from "lucide-react";
-import kyozoLogo from "/logo.png";
+import Image from "next/image";
 
 interface FormSubmission {
   id: string;
@@ -88,7 +89,7 @@ function HomePage() {
             <div className="max-w-6xl mx-auto">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <img src={kyozoLogo} alt="Kyozo" className="h-32" />
+                  <Image src="/logo.png" alt="Kyozo" width={128} height={128} className="h-32" />
                 </div>
                 <button
                   className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
@@ -130,9 +131,5 @@ function HomePage() {
 }
 
 export default function App() {
-  return (
-    <Routes>
-      <Route path="/" element={<HomePage />} />
-    </Routes>
-  );
+  return <HomePage />;
 }

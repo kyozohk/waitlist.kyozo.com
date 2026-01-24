@@ -1,14 +1,11 @@
+import { NextRequest, NextResponse } from 'next/server';
 import { Resend } from 'resend';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-export default async function handler(req: any, res: any) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
-
+export async function POST(request: NextRequest) {
   try {
-    const { firstName, lastName, email, phone, location, roleTypes, creativeWork, segments } = req.body;
+    const { firstName, lastName, email, phone, location, roleTypes, creativeWork, segments } = await request.json();
 
     const emailContent = `
       <h2>New Waitlist Submission</h2>
@@ -29,9 +26,9 @@ export default async function handler(req: any, res: any) {
       html: emailContent,
     });
 
-    res.status(200).json({ success: true });
+    return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Error sending notification:', error);
-    res.status(500).json({ error: 'Failed to send notification' });
+    return NextResponse.json({ error: 'Failed to send notification' }, { status: 500 });
   }
 }

@@ -1,14 +1,11 @@
+import { NextRequest, NextResponse } from 'next/server';
 import { Resend } from 'resend';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-export default async function handler(req: any, res: any) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
-
+export async function POST(request: NextRequest) {
   try {
-    const { to, message } = req.body;
+    const { to, message } = await request.json();
 
     await resend.emails.send({
       from: 'Will from Kyozo <will@kyozo.com>',
@@ -17,9 +14,9 @@ export default async function handler(req: any, res: any) {
       html: message,
     });
 
-    res.status(200).json({ success: true });
+    return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Error sending reply:', error);
-    res.status(500).json({ error: 'Failed to send reply' });
+    return NextResponse.json({ error: 'Failed to send reply' }, { status: 500 });
   }
 }
