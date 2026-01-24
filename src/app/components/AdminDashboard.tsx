@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "motion/react";
 import { X, Download, Search, Filter, Users, ChevronDown, ChevronUp } from "lucide-react";
+import { getWaitlistSubmissions } from "@/lib/firestore";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import {
@@ -43,14 +44,31 @@ interface FormSubmission {
 }
 
 interface AdminDashboardProps {
-  submissions: FormSubmission[];
   onClose: () => void;
 }
 
-export function AdminDashboard({ submissions, onClose }: AdminDashboardProps) {
+export function AdminDashboard({ onClose }: AdminDashboardProps) {
+  const [submissions, setSubmissions] = useState<FormSubmission[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterSegment, setFilterSegment] = useState<string>("all");
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    loadSubmissions();
+  }, []);
+
+  const loadSubmissions = async () => {
+    try {
+      setLoading(true);
+      const data = await getWaitlistSubmissions();
+      setSubmissions(data as FormSubmission[]);
+    } catch (error) {
+      console.error('Error loading submissions:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const toggleRowExpansion = (id: string) => {
     const newExpanded = new Set(expandedRows);
@@ -176,6 +194,17 @@ export function AdminDashboard({ submissions, onClose }: AdminDashboardProps) {
     };
     return labels[value] || value;
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-[var(--kyozo-primary)] mx-auto mb-4"></div>
+          <p className="text-lg text-muted-foreground">Loading submissions...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
