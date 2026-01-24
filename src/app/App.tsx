@@ -214,7 +214,7 @@ export default function App() {
     <div className="min-h-screen bg-background relative overflow-hidden">
       {/* Show Admin Dashboard in full screen when authenticated */}
       {isAdminAuthenticated ? (
-        <AdminDashboard submissions={submissions} onClose={handleAdminClose} />
+        <AdminDashboard onClose={handleAdminClose} />
       ) : (
         <>
           {/* Decorative Background Elements */}

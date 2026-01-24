@@ -1,6 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { ArrowRight, ArrowLeft, Lock } from "lucide-react";
+import { authenticateAnonymously, auth } from "@/lib/firebase";
+import { saveWaitlistSubmission } from "@/lib/firestore";
+import { sendNewSubmissionNotification } from "@/lib/email";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Textarea } from "./ui/textarea";
@@ -52,6 +55,8 @@ export function WaitlistForm({ onSubmit }: WaitlistFormProps) {
   const [requestName, setRequestName] = useState("");
   const [requestSubmitted, setRequestSubmitted] = useState(false);
   const [requestCreativeWork, setRequestCreativeWork] = useState("");
+  const [userId, setUserId] = useState<string | null>(null);
+  const [isAuthenticating, setIsAuthenticating] = useState(true);
   const [formData, setFormData] = useState<FormData>({
     firstName: "",
     lastName: "",
@@ -65,6 +70,27 @@ export function WaitlistForm({ onSubmit }: WaitlistFormProps) {
     resonanceReasons: [],
     communitySelections: [],
   });
+
+  // Authenticate user anonymously on mount
+  useEffect(() => {
+    const initAuth = async () => {
+      try {
+        if (!auth.currentUser) {
+          const user = await authenticateAnonymously();
+          setUserId(user.uid);
+          console.log('User authenticated:', user.uid);
+        } else {
+          setUserId(auth.currentUser.uid);
+          console.log('User already authenticated:', auth.currentUser.uid);
+        }
+      } catch (error) {
+        console.error('Failed to authenticate:', error);
+      } finally {
+        setIsAuthenticating(false);
+      }
+    };
+    initAuth();
+  }, []);
 
   const updateFormData = (field: keyof FormData, value: string | string[]) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -231,18 +257,59 @@ export function WaitlistForm({ onSubmit }: WaitlistFormProps) {
     }
   };
 
-  const handleSubmit = () => {
-    const submission = {
-      id: Date.now().toString(),
-      timestamp: new Date().toISOString(),
-      ...formData,
-      productFeedbackSurvey: formData.question2,
-    };
-    
-    console.log("Form submitted:", submission);
-    // TODO: Send to backend/Supabase
-    onSubmit(submission);
-    setIsSubmitted(true);
+  const handleSubmit = async () => {
+    if (!userId) {
+      console.error('User not authenticated');
+      alert('Please wait for authentication to complete');
+      return;
+    }
+
+    try {
+      const submissionData = {
+        userId,
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        email: formData.email,
+        phone: formData.phone,
+        location: formData.location,
+        roleTypes: formData.roleTypes,
+        creativeWork: formData.creativeWork,
+        segments: [],
+        artistQuestions: { q1: '', q2: '', q3: '', q4: '', q5: '' },
+        communityQuestions: { q1: '', q2: '', q3: '', q4: '', q5: '' },
+        productFeedbackSurvey: formData.betaTesting,
+        resonanceLevel: formData.resonanceLevel,
+        resonanceReasons: formData.resonanceReasons,
+        communitySelections: formData.communitySelections,
+      };
+
+      // Save to Firestore
+      console.log('Saving to Firestore...');
+      const docId = await saveWaitlistSubmission(submissionData);
+      console.log('Submission saved with ID:', docId);
+
+      // Send email notification (disabled for local dev without vercel dev)
+      // try {
+      //   console.log('Sending email notification...');
+      //   await sendNewSubmissionNotification(formData);
+      //   console.log('Email notification sent');
+      // } catch (emailError) {
+      //   console.error('Failed to send email:', emailError);
+      //   // Don't fail the whole submission if email fails
+      // }
+
+      // Call parent onSubmit
+      onSubmit({
+        id: docId,
+        timestamp: new Date().toISOString(),
+        ...formData,
+      });
+      
+      setIsSubmitted(true);
+    } catch (error) {
+      console.error('Error submitting form:', error);
+      alert('Failed to submit form. Please try again.');
+    }
   };
 
   const handlePasscodeSubmit = () => {

@@ -4,6 +4,8 @@ import { Lock, Eye, EyeOff } from "lucide-react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { auth } from "@/lib/firebase";
 
 interface AdminLoginProps {
   onAuthenticate: () => void;
@@ -11,21 +13,35 @@ interface AdminLoginProps {
 }
 
 export function AdminLogin({ onAuthenticate, onCancel }: AdminLoginProps) {
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsLoading(true);
+    setError("");
     
-    // TODO: Replace with actual password validation
-    const ADMIN_PASSWORD = "kyozo2026admin";
-    
-    if (password === ADMIN_PASSWORD) {
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      console.log('Admin authenticated successfully');
       onAuthenticate();
-    } else {
-      setError("Incorrect password. Please try again.");
+    } catch (error: any) {
+      console.error('Admin login error:', error);
+      if (error.code === 'auth/invalid-credential' || error.code === 'auth/wrong-password') {
+        setError("Invalid email or password. Please try again.");
+      } else if (error.code === 'auth/user-not-found') {
+        setError("No admin account found with this email.");
+      } else if (error.code === 'auth/too-many-requests') {
+        setError("Too many failed attempts. Please try again later.");
+      } else {
+        setError("Authentication failed. Please try again.");
+      }
       setPassword("");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -42,11 +58,27 @@ export function AdminLogin({ onAuthenticate, onCancel }: AdminLoginProps) {
           </div>
           <h2 className="text-3xl font-bold mb-2">Admin Access</h2>
           <p className="text-muted-foreground">
-            Enter your password to access the admin dashboard
+            Sign in with your admin credentials
           </p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="space-y-2">
+            <Label htmlFor="admin-email">Email</Label>
+            <Input
+              id="admin-email"
+              type="email"
+              placeholder="admin@kyozo.com"
+              value={email}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                setError("");
+              }}
+              className="text-lg h-14 border-2 focus:border-[var(--kyozo-primary)] transition-colors"
+              autoFocus
+              required
+            />
+          </div>
           <div className="space-y-2">
             <Label htmlFor="admin-password">Password</Label>
             <div className="relative">
@@ -60,7 +92,7 @@ export function AdminLogin({ onAuthenticate, onCancel }: AdminLoginProps) {
                   setError("");
                 }}
                 className="text-lg h-14 border-2 focus:border-[var(--kyozo-primary)] transition-colors pr-12"
-                autoFocus
+                required
               />
               <button
                 type="button"
@@ -96,9 +128,10 @@ export function AdminLogin({ onAuthenticate, onCancel }: AdminLoginProps) {
             </Button>
             <Button
               type="submit"
-              className="flex-1 h-12 text-base bg-gradient-to-r from-[var(--kyozo-primary)] to-[var(--kyozo-secondary)] hover:opacity-90 transition-opacity"
+              disabled={isLoading}
+              className="flex-1 h-12 text-base bg-gradient-to-r from-[var(--kyozo-primary)] to-[var(--kyozo-secondary)] hover:opacity-90 transition-opacity disabled:opacity-50"
             >
-              Access Dashboard
+              {isLoading ? "Signing in..." : "Access Dashboard"}
             </Button>
           </div>
         </form>

@@ -1,6 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "motion/react";
-import { X, Download, Search, Filter, Users, ChevronDown, ChevronUp } from "lucide-react";
+import { X, Search, Download, Mail, Filter, ChevronDown, ChevronUp, Users } from "lucide-react";
+import { getWaitlistSubmissions } from "@/lib/firestore";
+import { sendReplyEmail } from "@/lib/email";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import {
@@ -43,14 +45,33 @@ interface FormSubmission {
 }
 
 interface AdminDashboardProps {
-  submissions: FormSubmission[];
   onClose: () => void;
 }
 
-export function AdminDashboard({ submissions, onClose }: AdminDashboardProps) {
+export function AdminDashboard({ onClose }: AdminDashboardProps) {
+  const [submissions, setSubmissions] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterSegment, setFilterSegment] = useState<string>("all");
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
+
+  // Fetch submissions from Firestore on mount
+  useEffect(() => {
+    const fetchSubmissions = async () => {
+      try {
+        console.log('Fetching submissions from Firestore...');
+        const data = await getWaitlistSubmissions();
+        console.log('Fetched submissions:', data);
+        setSubmissions(data);
+      } catch (error) {
+        console.error('Error fetching submissions:', error);
+        alert('Failed to load submissions. Please refresh the page.');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchSubmissions();
+  }, []);
 
   const toggleRowExpansion = (id: string) => {
     const newExpanded = new Set(expandedRows);
@@ -177,6 +198,17 @@ export function AdminDashboard({ submissions, onClose }: AdminDashboardProps) {
     return labels[value] || value;
   };
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading submissions...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       <motion.div
@@ -213,13 +245,13 @@ export function AdminDashboard({ submissions, onClose }: AdminDashboardProps) {
               <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
                 <p className="text-white/70 text-sm">Artists / Creatives</p>
                 <p className="text-3xl font-bold">
-                  {submissions.filter(s => s.segments.includes("artist")).length}
+                  {submissions.filter(s => s.segments?.includes("artist") || s.roleTypes?.some((r: string) => r.includes("artist"))).length}
                 </p>
               </div>
               <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
                 <p className="text-white/70 text-sm">Community Leaders</p>
                 <p className="text-3xl font-bold">
-                  {submissions.filter(s => s.segments.includes("community")).length}
+                  {submissions.filter(s => s.segments?.includes("community") || s.roleTypes?.some((r: string) => r.includes("community"))).length}
                 </p>
               </div>
             </div>
