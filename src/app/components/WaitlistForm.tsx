@@ -288,15 +288,15 @@ export function WaitlistForm({ onSubmit }: WaitlistFormProps) {
       const docId = await saveWaitlistSubmission(submissionData);
       console.log('Submission saved with ID:', docId);
 
-      // Send email notification (disabled for local dev without vercel dev)
-      // try {
-      //   console.log('Sending email notification...');
-      //   await sendNewSubmissionNotification(formData);
-      //   console.log('Email notification sent');
-      // } catch (emailError) {
-      //   console.error('Failed to send email:', emailError);
-      //   // Don't fail the whole submission if email fails
-      // }
+      // Send email notification to dev@kyozo.com
+      try {
+        console.log('Sending email notification...');
+        await sendNewSubmissionNotification(formData);
+        console.log('Email notification sent');
+      } catch (emailError) {
+        console.error('Failed to send email:', emailError);
+        // Don't fail the whole submission if email fails
+      }
 
       // Call parent onSubmit
       onSubmit({

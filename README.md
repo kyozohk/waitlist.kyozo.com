@@ -1,3 +1,4 @@
+pass code to access the survey KYOZO2026
 
   # Private Waitlist Sign-Up Page
 

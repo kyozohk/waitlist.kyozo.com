@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "motion/react";
-import { X, Search, Download, Mail, Filter, ChevronDown, ChevronUp, Users } from "lucide-react";
-import { getWaitlistSubmissions } from "@/lib/firestore";
+import { X, Search, Download, Mail, Filter, ChevronDown, ChevronUp, Users, Trash2, AlertTriangle } from "lucide-react";
+import { getWaitlistSubmissions, deleteWaitlistSubmission } from "@/lib/firestore";
 import { sendReplyEmail } from "@/lib/email";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
@@ -54,6 +54,8 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [filterSegment, setFilterSegment] = useState<string>("all");
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Fetch submissions from Firestore on mount
   useEffect(() => {
@@ -81,6 +83,21 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
       newExpanded.add(id);
     }
     setExpandedRows(newExpanded);
+  };
+
+  const handleDeleteSubmission = async (id: string) => {
+    try {
+      setIsDeleting(true);
+      await deleteWaitlistSubmission(id);
+      setSubmissions(prev => prev.filter(sub => sub.id !== id));
+      setDeleteConfirmId(null);
+      console.log('Submission deleted successfully');
+    } catch (error) {
+      console.error('Error deleting submission:', error);
+      alert('Failed to delete submission. Please try again.');
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   const filteredSubmissions = submissions.filter((submission) => {
@@ -360,7 +377,46 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
                           <p className="text-sm">{new Date(submission.timestamp).toLocaleDateString()}</p>
                         </div>
                       </div>
-                      <div className="ml-4">
+                      <div className="ml-4 flex items-center gap-2">
+                        {deleteConfirmId === submission.id ? (
+                          <div className="flex items-center gap-2">
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={(e: React.MouseEvent) => {
+                                e.stopPropagation();
+                                handleDeleteSubmission(submission.id);
+                              }}
+                              disabled={isDeleting}
+                              className="h-8 px-3"
+                            >
+                              {isDeleting ? 'Deleting...' : 'Confirm'}
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={(e: React.MouseEvent) => {
+                                e.stopPropagation();
+                                setDeleteConfirmId(null);
+                              }}
+                              className="h-8 px-3"
+                            >
+                              Cancel
+                            </Button>
+                          </div>
+                        ) : (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={(e: React.MouseEvent) => {
+                              e.stopPropagation();
+                              setDeleteConfirmId(submission.id);
+                            }}
+                            className="h-8 px-3 text-red-600 hover:text-red-700 hover:bg-red-50"
+                          >
+                            {/* <Trash2 className="w-4 h-4" /> */}
+                          </Button>
+                        )}
                         {expandedRows.has(submission.id) ? (
                           <ChevronUp className="w-5 h-5 text-gray-400" />
                         ) : (

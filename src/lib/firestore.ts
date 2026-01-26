@@ -60,3 +60,27 @@ export const getWaitlistSubmissions = async () => {
     throw error;
   }
 };
+
+export const deleteWaitlistSubmission = async (id: string) => {
+  try {
+    const response = await fetch('/api/delete-submission', {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ id }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to delete submission');
+    }
+
+    const result = await response.json();
+    console.log('Submission deleted successfully:', id);
+    return result;
+  } catch (error) {
+    console.error('Error deleting submission:', error);
+    throw error;
+  }
+};
