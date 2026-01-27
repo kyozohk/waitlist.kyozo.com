@@ -4,7 +4,7 @@
 
 ### 1. Firebase Configuration Files Created
 - **`src/lib/firebase.ts`** - Firebase initialization and authentication
-  - Uses Vite environment variables (`VITE_FIREBASE_*`)
+  - Uses Vite environment variables (`FIREBASE_*`)
   - Exports `auth`, `db`, and `authenticateAnonymously()`
   
 - **`src/lib/firestore.ts`** - Firestore database operations
@@ -141,13 +141,13 @@ Add to `.env.local`:
 
 ```env
 # Firebase Configuration
-VITE_FIREBASE_API_KEY=your_api_key
-VITE_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
-VITE_FIREBASE_PROJECT_ID=your_project_id
-VITE_FIREBASE_STORAGE_BUCKET=your_project.appspot.com
-VITE_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
-VITE_FIREBASE_APP_ID=your_app_id
-VITE_FIREBASE_MEASUREMENT_ID=G-XXXXXXXXXX
+FIREBASE_API_KEY=your_api_key
+FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
+FIREBASE_PROJECT_ID=your_project_id
+FIREBASE_STORAGE_BUCKET=your_project.appspot.com
+FIREBASE_MESSAGING_SENDER_ID=your_sender_id
+FIREBASE_APP_ID=your_app_id
+FIREBASE_MEASUREMENT_ID=G-XXXXXXXXXX
 
 # Resend API Key (for serverless functions)
 RESEND_API_KEY=re_xxxxxxxxxxxxx
