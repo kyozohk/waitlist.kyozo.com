@@ -285,7 +285,7 @@ export function WaitlistForm({ onSubmit }: WaitlistFormProps) {
       const docId = await saveWaitlistSubmission(submissionData);
       console.log('Submission saved with ID:', docId);
 
-      // Send email notification to dev@kyozo.com
+      // Send email notification to will@contact.kyozo.com
       try {
         console.log('Sending email notification...');
         await sendNewSubmissionNotification(formData);

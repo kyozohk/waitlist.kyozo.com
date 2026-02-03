@@ -46,12 +46,12 @@ export default async function handler(req, res) {
       communitySelections: formData.communitySelections,
     });
 
-    console.log('📧 Server: Preparing to send email to dev@kyozo.com');
+    console.log('📧 Server: Preparing to send email to will@contact.kyozo.com');
 
     // Send email notification
     const { data, error } = await resend.emails.send({
       from: 'Kyozo Waitlist <waitlist@contact.kyozo.com>',
-      to: ['dev@kyozo.com'],
+      to: ['will@contact.kyozo.com'],
       subject: `New Waitlist Submission from ${formData.firstName} ${formData.lastName}`,
       html: `
         <h2>New Waitlist Submission</h2>
@@ -77,7 +77,7 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: error.message });
     }
 
-    console.log('✅ Server: Email sent successfully to dev@kyozo.com');
+    console.log('✅ Server: Email sent successfully to will@contact.kyozo.com');
     console.log('📧 Server: Email ID:', data?.id);
     return res.status(200).json({ success: true, data });
   } catch (error) {
