@@ -13,7 +13,7 @@ interface AdminLoginProps {
 }
 
 export function AdminLogin({ onAuthenticate, onCancel }: AdminLoginProps) {
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState("dev@kyozo.com");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);

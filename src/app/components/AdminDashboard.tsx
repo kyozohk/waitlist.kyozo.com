@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "motion/react";
-import { X, Download, Search, Filter, Users, ChevronDown, ChevronUp, Trash2 } from "lucide-react";
+import { X, Download, Search, Filter, Users, ChevronDown, ChevronUp, Trash2, Mail, Send, MessageCircle } from "lucide-react";
 import { getWaitlistSubmissions, deleteWaitlistSubmission } from "@/lib/firestore";
 import { sendReplyEmail } from "@/lib/email";
 import { Button } from "./ui/button";
@@ -54,8 +54,12 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [filterSegment, setFilterSegment] = useState<string>("all");
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
-  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [deleteConfirmSubmission, setDeleteConfirmSubmission] = useState<FormSubmission | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [emailDialogSubmission, setEmailDialogSubmission] = useState<FormSubmission | null>(null);
+  const [emailSubject, setEmailSubject] = useState("");
+  const [emailMessage, setEmailMessage] = useState("");
+  const [isSendingEmail, setIsSendingEmail] = useState(false);
 
   // Fetch submissions from Firestore on mount
   useEffect(() => {
@@ -75,18 +79,42 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
     fetchSubmissions();
   }, []);
 
-  const handleDeleteSubmission = async (id: string) => {
+  const handleDeleteSubmission = async () => {
+    if (!deleteConfirmSubmission) return;
     try {
       setIsDeleting(true);
-      await deleteWaitlistSubmission(id);
-      setSubmissions(prev => prev.filter(sub => sub.id !== id));
-      setDeleteConfirmId(null);
+      await deleteWaitlistSubmission(deleteConfirmSubmission.id);
+      setSubmissions(prev => prev.filter(sub => sub.id !== deleteConfirmSubmission.id));
+      setDeleteConfirmSubmission(null);
       console.log('Submission deleted successfully');
     } catch (error) {
       console.error('Error deleting submission:', error);
       alert('Failed to delete submission. Please try again.');
     } finally {
       setIsDeleting(false);
+    }
+  };
+
+  const openEmailDialog = (submission: FormSubmission) => {
+    setEmailDialogSubmission(submission);
+    setEmailSubject(`Re: Your Kyozo Waitlist Submission`);
+    setEmailMessage(`Hi ${submission.firstName},\n\nThank you for joining the Kyozo waitlist!\n\n`);
+  };
+
+  const handleSendEmail = async () => {
+    if (!emailDialogSubmission || !emailSubject.trim() || !emailMessage.trim()) return;
+    try {
+      setIsSendingEmail(true);
+      await sendReplyEmail(emailDialogSubmission.email, emailSubject, emailMessage);
+      alert('Email sent successfully!');
+      setEmailDialogSubmission(null);
+      setEmailSubject("");
+      setEmailMessage("");
+    } catch (error) {
+      console.error('Error sending email:', error);
+      alert('Failed to send email. Please try again.');
+    } finally {
+      setIsSendingEmail(false);
     }
   };
 
@@ -377,7 +405,39 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
                           <p className="text-sm">{new Date(submission.timestamp).toLocaleDateString()}</p>
                         </div>
                       </div>
-                      <div className="ml-4">
+                      <div className="ml-4 flex items-center gap-2">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            openEmailDialog(submission);
+                          }}
+                          className="p-2 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-colors"
+                          title="Send email"
+                        >
+                          <Mail className="w-4 h-4" />
+                        </button>
+                        {submission.phone && (
+                          <a
+                            href={`https://wa.me/${submission.phone.replace(/[^0-9]/g, '')}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={(e) => e.stopPropagation()}
+                            className="p-2 text-gray-400 hover:text-green-500 hover:bg-green-50 rounded-lg transition-colors"
+                            title="WhatsApp"
+                          >
+                            <MessageCircle className="w-4 h-4" />
+                          </a>
+                        )}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setDeleteConfirmSubmission(submission);
+                          }}
+                          className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                          title="Delete submission"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
                         {expandedRows.has(submission.id) ? (
                           <ChevronUp className="w-5 h-5 text-gray-400" />
                         ) : (
@@ -626,6 +686,130 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
           )}
         </div>
       </motion.div>
+
+      {/* Delete Confirmation Dialog */}
+      {deleteConfirmSubmission && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white rounded-xl shadow-2xl max-w-md w-full mx-4 overflow-hidden"
+          >
+            <div className="p-6 border-b bg-red-50">
+              <h3 className="text-lg font-semibold text-red-700 flex items-center gap-2">
+                <Trash2 className="w-5 h-5" />
+                Confirm Delete
+              </h3>
+            </div>
+            <div className="p-6">
+              <p className="text-gray-600 mb-4">Are you sure you want to delete this submission?</p>
+              <div className="bg-gray-50 rounded-lg p-4 space-y-2">
+                <p className="text-sm">
+                  <span className="text-gray-500">Name:</span>{" "}
+                  <span className="font-medium">{deleteConfirmSubmission.firstName} {deleteConfirmSubmission.lastName}</span>
+                </p>
+                <p className="text-sm">
+                  <span className="text-gray-500">Email:</span>{" "}
+                  <span className="font-medium">{deleteConfirmSubmission.email}</span>
+                </p>
+                <p className="text-sm">
+                  <span className="text-gray-500">Location:</span>{" "}
+                  <span className="font-medium">{deleteConfirmSubmission.location}</span>
+                </p>
+                <p className="text-sm">
+                  <span className="text-gray-500">Submitted:</span>{" "}
+                  <span className="font-medium">{new Date(deleteConfirmSubmission.timestamp).toLocaleString()}</span>
+                </p>
+              </div>
+              <p className="text-sm text-red-600 mt-4">This action cannot be undone.</p>
+            </div>
+            <div className="p-4 border-t bg-gray-50 flex justify-end gap-3">
+              <Button
+                variant="outline"
+                onClick={() => setDeleteConfirmSubmission(null)}
+                disabled={isDeleting}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={handleDeleteSubmission}
+                disabled={isDeleting}
+                className="bg-red-600 hover:bg-red-700"
+              >
+                {isDeleting ? "Deleting..." : "Delete"}
+              </Button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Email Dialog */}
+      {emailDialogSubmission && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white rounded-xl shadow-2xl max-w-lg w-full mx-4 overflow-hidden"
+          >
+            <div className="p-6 border-b bg-blue-50">
+              <h3 className="text-lg font-semibold text-blue-700 flex items-center gap-2">
+                <Mail className="w-5 h-5" />
+                Send Email
+              </h3>
+              <p className="text-sm text-blue-600 mt-1">
+                To: {emailDialogSubmission.firstName} {emailDialogSubmission.lastName} ({emailDialogSubmission.email})
+              </p>
+            </div>
+            <div className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Subject</label>
+                <Input
+                  value={emailSubject}
+                  onChange={(e) => setEmailSubject(e.target.value)}
+                  placeholder="Email subject..."
+                  className="w-full"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Message</label>
+                <textarea
+                  value={emailMessage}
+                  onChange={(e) => setEmailMessage(e.target.value)}
+                  placeholder="Write your message..."
+                  rows={6}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                />
+              </div>
+            </div>
+            <div className="p-4 border-t bg-gray-50 flex justify-end gap-3">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setEmailDialogSubmission(null);
+                  setEmailSubject("");
+                  setEmailMessage("");
+                }}
+                disabled={isSendingEmail}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleSendEmail}
+                disabled={isSendingEmail || !emailSubject.trim() || !emailMessage.trim()}
+                className="bg-blue-600 hover:bg-blue-700"
+              >
+                {isSendingEmail ? "Sending..." : (
+                  <>
+                    <Send className="w-4 h-4 mr-2" />
+                    Send Email
+                  </>
+                )}
+              </Button>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 }

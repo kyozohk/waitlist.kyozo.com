@@ -30,7 +30,7 @@ export default async function handler(req, res) {
 
     // Send reply email
     const { data, error } = await resend.emails.send({
-      from: 'Kyozo Team <team@kyozo.com>',
+      from: 'Kyozo <dev@kyozo.com>',
       to: [to],
       subject: subject,
       html: message,
