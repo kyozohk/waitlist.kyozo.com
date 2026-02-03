@@ -92,7 +92,7 @@ export function AdminLogin({ onAuthenticate, onCancel }: AdminLoginProps) {
                   setError("");
                 }}
                 className="text-lg h-14 border-2 focus:border-[var(--kyozo-primary)] transition-colors pr-12"
-                required
+                autoFocus
               />
               <button
                 type="button"

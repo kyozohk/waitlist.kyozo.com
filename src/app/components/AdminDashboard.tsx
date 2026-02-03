@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "motion/react";
-import { X, Search, Download, Mail, Filter, ChevronDown, ChevronUp, Users, Trash2, AlertTriangle } from "lucide-react";
+import { X, Download, Search, Filter, Users, ChevronDown, ChevronUp, Trash2 } from "lucide-react";
 import { getWaitlistSubmissions, deleteWaitlistSubmission } from "@/lib/firestore";
 import { sendReplyEmail } from "@/lib/email";
 import { Button } from "./ui/button";
@@ -49,7 +49,7 @@ interface AdminDashboardProps {
 }
 
 export function AdminDashboard({ onClose }: AdminDashboardProps) {
-  const [submissions, setSubmissions] = useState<any[]>([]);
+  const [submissions, setSubmissions] = useState<FormSubmission[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterSegment, setFilterSegment] = useState<string>("all");
@@ -64,7 +64,7 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
         console.log('Fetching submissions from Firestore...');
         const data = await getWaitlistSubmissions();
         console.log('Fetched submissions:', data);
-        setSubmissions(data);
+        setSubmissions(data as FormSubmission[]);
       } catch (error) {
         console.error('Error fetching submissions:', error);
         alert('Failed to load submissions. Please refresh the page.');
@@ -74,16 +74,6 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
     };
     fetchSubmissions();
   }, []);
-
-  const toggleRowExpansion = (id: string) => {
-    const newExpanded = new Set(expandedRows);
-    if (newExpanded.has(id)) {
-      newExpanded.delete(id);
-    } else {
-      newExpanded.add(id);
-    }
-    setExpandedRows(newExpanded);
-  };
 
   const handleDeleteSubmission = async (id: string) => {
     try {
@@ -98,6 +88,16 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
     } finally {
       setIsDeleting(false);
     }
+  };
+
+  const toggleRowExpansion = (id: string) => {
+    const newExpanded = new Set(expandedRows);
+    if (newExpanded.has(id)) {
+      newExpanded.delete(id);
+    } else {
+      newExpanded.add(id);
+    }
+    setExpandedRows(newExpanded);
   };
 
   const filteredSubmissions = submissions.filter((submission) => {
@@ -262,13 +262,13 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
               <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
                 <p className="text-white/70 text-sm">Artists / Creatives</p>
                 <p className="text-3xl font-bold">
-                  {submissions.filter(s => s.segments?.includes("artist") || s.roleTypes?.some((r: string) => r.includes("artist"))).length}
+                  {submissions.filter(s => s.segments.includes("artist")).length}
                 </p>
               </div>
               <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
                 <p className="text-white/70 text-sm">Community Leaders</p>
                 <p className="text-3xl font-bold">
-                  {submissions.filter(s => s.segments?.includes("community") || s.roleTypes?.some((r: string) => r.includes("community"))).length}
+                  {submissions.filter(s => s.segments.includes("community")).length}
                 </p>
               </div>
             </div>
@@ -377,46 +377,7 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
                           <p className="text-sm">{new Date(submission.timestamp).toLocaleDateString()}</p>
                         </div>
                       </div>
-                      <div className="ml-4 flex items-center gap-2">
-                        {deleteConfirmId === submission.id ? (
-                          <div className="flex items-center gap-2">
-                            <Button
-                              size="sm"
-                              variant="destructive"
-                              onClick={(e: React.MouseEvent) => {
-                                e.stopPropagation();
-                                handleDeleteSubmission(submission.id);
-                              }}
-                              disabled={isDeleting}
-                              className="h-8 px-3"
-                            >
-                              {isDeleting ? 'Deleting...' : 'Confirm'}
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={(e: React.MouseEvent) => {
-                                e.stopPropagation();
-                                setDeleteConfirmId(null);
-                              }}
-                              className="h-8 px-3"
-                            >
-                              Cancel
-                            </Button>
-                          </div>
-                        ) : (
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={(e: React.MouseEvent) => {
-                              e.stopPropagation();
-                              setDeleteConfirmId(submission.id);
-                            }}
-                            className="h-8 px-3 text-red-600 hover:text-red-700 hover:bg-red-50"
-                          >
-                            {/* <Trash2 className="w-4 h-4" /> */}
-                          </Button>
-                        )}
+                      <div className="ml-4">
                         {expandedRows.has(submission.id) ? (
                           <ChevronUp className="w-5 h-5 text-gray-400" />
                         ) : (

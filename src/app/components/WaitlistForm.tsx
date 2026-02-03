@@ -71,27 +71,6 @@ export function WaitlistForm({ onSubmit }: WaitlistFormProps) {
     communitySelections: [],
   });
 
-  // Authenticate user anonymously on mount
-  useEffect(() => {
-    const initAuth = async () => {
-      try {
-        if (!auth.currentUser) {
-          const user = await authenticateAnonymously();
-          setUserId(user.uid);
-          console.log('User authenticated:', user.uid);
-        } else {
-          setUserId(auth.currentUser.uid);
-          console.log('User already authenticated:', auth.currentUser.uid);
-        }
-      } catch (error) {
-        console.error('Failed to authenticate:', error);
-      } finally {
-        setIsAuthenticating(false);
-      }
-    };
-    initAuth();
-  }, []);
-
   const updateFormData = (field: keyof FormData, value: string | string[]) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
     // Clear error when user starts typing
@@ -258,15 +237,25 @@ export function WaitlistForm({ onSubmit }: WaitlistFormProps) {
   };
 
   const handleSubmit = async () => {
-    if (!userId) {
-      console.error('User not authenticated');
-      alert('Please wait for authentication to complete');
-      return;
+    // If user is not authenticated yet, try to authenticate first
+    let currentUserId = userId;
+    if (!currentUserId) {
+      try {
+        console.log('User not authenticated, attempting authentication...');
+        const user = await authenticateAnonymously();
+        currentUserId = user.uid;
+        setUserId(user.uid);
+        console.log('User authenticated:', user.uid);
+      } catch (authError) {
+        console.error('Failed to authenticate:', authError);
+        alert('Authentication failed. Please try again.');
+        return;
+      }
     }
 
     try {
       const submissionData = {
-        userId,
+        userId: currentUserId,
         firstName: formData.firstName,
         lastName: formData.lastName,
         email: formData.email,
@@ -382,53 +371,30 @@ export function WaitlistForm({ onSubmit }: WaitlistFormProps) {
   if (showLandingPage) {
     return (
       <div className="w-full max-w-3xl mx-auto px-4">
-        {/* Title Quote */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.1 }}
-          className="mb-12 text-center"
-        >
-          <h1 className="text-5xl md:text-6xl lg:text-7xl text-foreground font-normal leading-tight handwritten colored-pencil">
-            Kyozo... a game changer for Creatives
-          </h1>
-        </motion.div>
 
-        {/* Private Invitation Message */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.2 }}
-          className="mb-12 bg-gradient-to-br from-purple-50 to-pink-50 rounded-3xl p-8 md:p-10 text-foreground shadow-sm border border-purple-100/50"
-        >
-          <div className="text-center">
-            <div className="flex justify-center mb-4">
-              <Lock className="w-12 h-12 text-[var(--kyozo-secondary)]" />
-            </div>
-            <h2 className="text-2xl md:text-3xl text-[var(--kyozo-secondary)] mb-4 font-normal">
-              Private Beta Access
-            </h2>
-            <p className="text-base leading-relaxed text-muted-foreground">
-              Kyozo operates a private invitation system for access to the platform in beta version. 
-              Please enter the passcode you were given to access the sign-up form.
-            </p>
-          </div>
-        </motion.div>
+
+
 
         {/* Passcode Entry Section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.3 }}
-          className="mb-16 p-8 bg-white rounded-2xl shadow-lg border-2 border-border"
+          className="mb-16 w-full bg-[rgba(65,65,65,0.95)] flex flex-col gap-[12px] items-center justify-center p-[48px] relative rounded-[10px]"
         >
-          <h3 className="text-xl md:text-2xl mb-6 text-center font-semibold">
-            Enter Your Passcode
-          </h3>
-          <div className="space-y-4">
+          <div className="flex flex-col gap-[20px] items-center text-center w-full mb-4">
+            <h3 className="text-[#F1E0C7] text-[36px] tracking-[-1px] leading-[1.2] w-full m-0 font-bold">
+              Enter your passcode
+            </h3>
+            <p className="text-[16px] leading-[24px] text-white tracking-[-0.2px] w-full font-normal font-[Inter]">
+              Kyozo operates a private invitation system for access to the platform in beta version. Please enter the passcode you were given to access the sign-up form.
+            </p>
+          </div>
+          
+          <div className="flex flex-col gap-[24px] items-center justify-center w-full">
             <Input
               type="text"
-              placeholder="Enter passcode"
+              placeholder="Enter your access code"
               value={passcode}
               onChange={(e) => {
                 setPasscode(e.target.value);
@@ -439,16 +405,18 @@ export function WaitlistForm({ onSubmit }: WaitlistFormProps) {
                   handlePasscodeSubmit();
                 }
               }}
-              className="text-lg h-14 border-2 focus:border-[var(--kyozo-primary)] transition-colors text-center uppercase tracking-wider"
+              className="h-[60px] rounded-[12px] bg-white text-[#494645] text-[16px] border border-[rgba(79,73,73,0.2)] text-center placeholder:text-[#717182]"
             />
+            
             {passcodeError && (
-              <p className="text-destructive text-sm text-center">{passcodeError}</p>
+              <p className="text-[#ff6b6b] text-sm text-center font-medium mt-[-10px]">{passcodeError}</p>
             )}
+            
             <Button
               onClick={handlePasscodeSubmit}
-              className="w-full h-14 text-lg bg-gradient-to-r from-[var(--kyozo-primary)] to-[var(--kyozo-secondary)] hover:opacity-90 transition-opacity"
+              className="h-[48px] w-[180px] rounded-full bg-[#f7d47a] text-[#494645] text-[18px] font-semibold hover:bg-[#f7d47a]/90 hover:text-[#494645] transition-opacity border-none"
             >
-              Access Sign-Up Form
+              Unlock
             </Button>
           </div>
         </motion.div>
@@ -460,13 +428,20 @@ export function WaitlistForm({ onSubmit }: WaitlistFormProps) {
           transition={{ duration: 0.6, delay: 0.4 }}
           className="relative mb-16"
         >
-          <div className="absolute inset-0 flex items-center">
-            <span className="w-full border-t-2" />
-          </div>
-          <div className="relative flex justify-center text-sm uppercase">
-            <span className="bg-background px-4 text-muted-foreground font-semibold">
+          <div className="flex gap-[5px] items-center relative w-full">
+            <div className="bg-[#494645] flex-[1_0_0] h-[2px] min-h-px min-w-px opacity-40 relative">
+              <div aria-hidden="true" className="absolute border-2 border-[#494645] border-solid inset-[-1px] pointer-events-none" />
+            </div>
+            <p className="font-sans font-semibold leading-[20px] not-italic relative shrink-0 text-[#494645] text-[14px] text-center tracking-[-0.1504px] uppercase w-[44px]">
               Or
-            </span>
+            </p>
+            <div className="flex flex-[1_0_0] items-center justify-center min-h-px min-w-px relative">
+              <div className="-scale-y-100 flex-none rotate-180 w-full">
+                <div className="bg-[#494645] h-[2px] opacity-40 relative w-full">
+                  <div aria-hidden="true" className="absolute border border-[#494645] border-solid inset-[-0.5px] pointer-events-none" />
+                </div>
+              </div>
+            </div>
           </div>
         </motion.div>
 
@@ -475,67 +450,75 @@ export function WaitlistForm({ onSubmit }: WaitlistFormProps) {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.5 }}
-          className="p-8 bg-gradient-to-br from-cyan-50 to-blue-50 rounded-2xl border-2 border-cyan-100"
+          className="mb-16 w-full bg-[rgba(245,241,232,0.95)] flex flex-col gap-[12px] items-center justify-center p-[48px] relative rounded-[10px]"
         >
           {!requestSubmitted ? (
-            <>
-              <h3 className="text-xl md:text-2xl mb-4 text-center font-semibold text-[var(--kyozo-teal)]">
-                Request Waitlist Consideration
-              </h3>
-              <p className="text-center text-muted-foreground mb-6">
-                If you'd like to leave us your name and email to request consideration as part of our waitlist, input it here.
-              </p>
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="request-name">Full Name *</Label>
-                  <Input
-                    id="request-name"
-                    placeholder="Enter your full name"
-                    value={requestName}
-                    onChange={(e) => setRequestName(e.target.value)}
-                    className="text-lg h-12 border-2 focus:border-[var(--kyozo-teal)] transition-colors"
-                  />
+            <div className="w-full flex flex-col items-center">
+              <div className="flex flex-col gap-[20px] items-center text-center w-full mb-[50px]">
+                <div className="flex flex-col font-normal justify-center leading-[1.2] shrink-0 text-[#4f4949] text-[36px] tracking-[-1px]">
+                  <h3 className="text-[36px] font-bold">Waitlist request</h3>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="request-email">Email Address *</Label>
-                  <Input
-                    id="request-email"
-                    type="email"
-                    placeholder="your@email.com"
-                    value={requestEmail}
-                    onChange={(e) => setRequestEmail(e.target.value)}
-                    onKeyPress={(e) => {
-                      if (e.key === "Enter") {
-                        handleRequestSubmit();
-                      }
-                    }}
-                    className="text-lg h-12 border-2 focus:border-[var(--kyozo-teal)] transition-colors"
-                  />
+                <p className="font-normal leading-[22px] shrink-0 text-[#504c4c] text-[16px] tracking-[-0.5px] max-w-[486px]">
+                  If you'd like to leave us your name and email to request consideration as part of our waitlist, input it here.
+                </p>
+              </div>
+
+              <div className="flex flex-col gap-[50px] items-center w-full">
+                <div className="flex flex-col gap-[38px] items-start w-full">
+                  <div className="flex flex-col gap-[12px] items-start w-full">
+                    <Label htmlFor="request-name" className="font-semibold text-[#4f4949] text-[13px] tracking-[-0.15px]">Full Name</Label>
+                    <Input
+                      id="request-name"
+                      placeholder="Enter your name"
+                      value={requestName}
+                      onChange={(e) => setRequestName(e.target.value)}
+                      className="h-[60px] rounded-[12px] bg-white border border-[rgba(79,73,73,0.2)] text-[#4f4949] text-[14px] px-[16px] placeholder:text-[#717182] focus-visible:ring-1 focus-visible:ring-[#4f4949] shadow-none"
+                    />
+                  </div>
+
+                  <div className="flex flex-col gap-[12px] items-start w-full">
+                    <Label htmlFor="request-email" className="font-semibold text-[#4f4949] text-[13px] tracking-[-0.15px]">Email Address</Label>
+                    <Input
+                      id="request-email"
+                      type="email"
+                      placeholder="And your email"
+                      value={requestEmail}
+                      onChange={(e) => setRequestEmail(e.target.value)}
+                      onKeyPress={(e) => {
+                        if (e.key === "Enter") {
+                          handleRequestSubmit();
+                        }
+                      }}
+                      className="h-[60px] rounded-[12px] bg-white border border-[rgba(79,73,73,0.2)] text-[#4f4949] text-[14px] px-[16px] placeholder:text-[#717182] focus-visible:ring-1 focus-visible:ring-[#4f4949] shadow-none"
+                    />
+                  </div>
+
+                  <div className="flex flex-col gap-[12px] items-start w-full">
+                    <Label htmlFor="request-creative-work" className="font-semibold text-[#4f4949] text-[13px] tracking-[-0.15px]">Creative work</Label>
+                    <Textarea
+                      id="request-creative-work"
+                      placeholder="And we’d love to hear a bit more about your creative work...."
+                      value={requestCreativeWork}
+                      onChange={(e) => setRequestCreativeWork(e.target.value)}
+                      className="min-h-[150px] rounded-[12px] bg-white border border-[rgba(4,139,154,0.3)] text-[#4f4949] text-[14px] p-[16px] placeholder:text-[#717182] resize-none focus-visible:ring-1 focus-visible:ring-[#048b9a] shadow-none"
+                    />
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="request-creative-work">Creative work</Label>
-                  <Textarea
-                    id="request-creative-work"
-                    placeholder="Tell us a bit more about your creative work to help support your application."
-                    value={requestCreativeWork}
-                    onChange={(e) => setRequestCreativeWork(e.target.value)}
-                    className="text-lg min-h-[150px] border-2 focus:border-[var(--kyozo-teal)] transition-colors resize-none"
-                  />
-                </div>
+
                 <Button
                   onClick={handleRequestSubmit}
                   disabled={!requestName.trim() || !requestEmail.trim()}
-                  className="w-full h-12 text-base bg-[var(--kyozo-teal)] hover:opacity-90 transition-opacity"
+                  className="bg-[#414141] h-[48px] px-[24px] rounded-[999px] text-[#f5f1e8] text-[18px] font-semibold hover:bg-[#414141]/90 border-none tracking-[-0.36px] disabled:opacity-100 opacity-100"
                 >
-                  Submit Request
+                  Submit request
                 </Button>
               </div>
-            </>
+            </div>
           ) : (
             <div className="text-center py-8">
-              <div className="w-16 h-16 bg-[var(--kyozo-teal)] rounded-full flex items-center justify-center mx-auto mb-4">
+              <div className="w-16 h-16 bg-[#4f4949] rounded-full flex items-center justify-center mx-auto mb-4">
                 <svg
-                  className="w-8 h-8 text-white"
+                  className="w-8 h-8 text-[#f5f1e8]"
                   fill="none"
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -546,10 +529,10 @@ export function WaitlistForm({ onSubmit }: WaitlistFormProps) {
                   <path d="M5 13l4 4L19 7"></path>
                 </svg>
               </div>
-              <h3 className="text-2xl font-semibold text-[var(--kyozo-teal)] mb-2">
+              <h3 className="text-2xl font-semibold text-[#4f4949] mb-2">
                 Request Submitted!
               </h3>
-              <p className="text-muted-foreground">
+              <p className="text-[#504c4c]">
                 Thank you for your interest. We'll review your request and be in touch soon.
               </p>
             </div>
@@ -572,18 +555,6 @@ export function WaitlistForm({ onSubmit }: WaitlistFormProps) {
 
   return (
     <div className="w-full max-w-3xl mx-auto px-4">
-      {/* Title Quote */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: 0.1 }}
-        className="mb-12 text-center"
-      >
-        <h1 className="text-5xl md:text-6xl lg:text-7xl text-foreground font-normal leading-tight handwritten colored-pencil">
-          Kyozo... a game changer for Creatives
-        </h1>
-      </motion.div>
-
       {/* Invitation Message */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
@@ -592,7 +563,7 @@ export function WaitlistForm({ onSubmit }: WaitlistFormProps) {
         className="mb-12 bg-gradient-to-br from-cyan-50 to-blue-50 rounded-3xl p-8 md:p-10 text-foreground shadow-sm border border-cyan-100/50"
       >
         <div>
-          <h2 className="text-2xl md:text-3xl text-[var(--kyozo-teal)] mb-4 font-normal">
+          <h2 className="text-2xl md:text-3xl text-[var(--kyozo-teal)] mb-4 font-normal text-center">
             You're Invited
           </h2>
           <p className="text-base leading-relaxed text-muted-foreground mb-6">
@@ -628,7 +599,7 @@ export function WaitlistForm({ onSubmit }: WaitlistFormProps) {
                       Let's start with your basic information
                     </p>
                   </div>
-                  <Button
+                  {/* <Button
                     type="button"
                     variant="outline"
                     size="sm"
@@ -636,7 +607,7 @@ export function WaitlistForm({ onSubmit }: WaitlistFormProps) {
                     className="text-[var(--kyozo-teal)] border-[var(--kyozo-teal)] hover:bg-[var(--kyozo-teal)]/10"
                   >
                     Fill Info
-                  </Button>
+                  </Button> */}
                 </div>
 
                 <div className="space-y-2">
@@ -693,7 +664,7 @@ export function WaitlistForm({ onSubmit }: WaitlistFormProps) {
                     <h2 className="text-3xl md:text-4xl mb-3">Additional Information</h2>
                     <p className="text-muted-foreground">We need a few more details to personalize your experience</p>
                   </div>
-                  <Button
+                  {/* <Button
                     type="button"
                     variant="outline"
                     size="sm"
@@ -701,7 +672,7 @@ export function WaitlistForm({ onSubmit }: WaitlistFormProps) {
                     className="text-[var(--kyozo-teal)] border-[var(--kyozo-teal)] hover:bg-[var(--kyozo-teal)]/10"
                   >
                     Fill Info
-                  </Button>
+                  </Button> */}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="phone">Phone Number *</Label>
@@ -753,7 +724,7 @@ export function WaitlistForm({ onSubmit }: WaitlistFormProps) {
               <div className="space-y-6">
                 <div className="flex items-center justify-between">
                   <h2 className="text-3xl md:text-4xl mb-3">Tell us about your creative work</h2>
-                  <Button
+                  {/* <Button
                     type="button"
                     variant="outline"
                     size="sm"
@@ -761,7 +732,7 @@ export function WaitlistForm({ onSubmit }: WaitlistFormProps) {
                     className="text-[var(--kyozo-teal)] border-[var(--kyozo-teal)] hover:bg-[var(--kyozo-teal)]/10"
                   >
                     Fill Info
-                  </Button>
+                  </Button> */}
                 </div>
                 
                 {/* Role Types - Multiple Choice */}
@@ -809,23 +780,35 @@ export function WaitlistForm({ onSubmit }: WaitlistFormProps) {
                     ].map((role) => (
                       <div
                         key={role.value}
-                        className="flex items-start space-x-3 p-4 border rounded-lg hover:bg-muted/50 transition-colors cursor-pointer"
+                        className={`flex items-start space-x-3 p-4 border rounded-lg transition-all cursor-pointer ${
+                          formData.roleTypes.includes(role.value)
+                            ? 'bg-[#048B9A] border-[#048B9A] shadow-lg shadow-[#048B9A]/20'
+                            : 'border-border hover:bg-muted/50'
+                        }`}
                         onClick={() => toggleRoleType(role.value)}
                       >
                         <Checkbox
                           id={`role-${role.value}`}
                           checked={formData.roleTypes.includes(role.value)}
                           onCheckedChange={() => toggleRoleType(role.value)}
-                          className="mt-0.5"
+                          className={`mt-0.5 ${
+                            formData.roleTypes.includes(role.value)
+                              ? 'border-white data-[state=checked]:bg-white data-[state=checked]:text-[#048B9A]'
+                              : ''
+                          }`}
                         />
-                        <div className="flex-1 cursor-pointer grid grid-cols-[280px_1fr] gap-4 items-start">
+                        <div className="flex-1 cursor-pointer flex flex-col sm:grid sm:grid-cols-[280px_1fr] gap-1 sm:gap-4 items-start">
                           <Label
                             htmlFor={`role-${role.value}`}
-                            className="font-semibold cursor-pointer"
+                            className={`font-semibold cursor-pointer ${
+                              formData.roleTypes.includes(role.value) ? 'text-white' : ''
+                            }`}
                           >
                             {role.label}:
                           </Label>
-                          <div className="text-sm text-muted-foreground font-normal">
+                          <div className={`text-sm font-normal ${
+                            formData.roleTypes.includes(role.value) ? 'text-white/90' : 'text-muted-foreground'
+                          }`}>
                             {role.description}
                           </div>
                         </div>
@@ -860,7 +843,7 @@ export function WaitlistForm({ onSubmit }: WaitlistFormProps) {
                       We are offering six months of premium access for free to those who help us test the platform.
                     </p>
                   </div>
-                  <Button
+                  {/* <Button
                     type="button"
                     variant="outline"
                     size="sm"
@@ -868,7 +851,7 @@ export function WaitlistForm({ onSubmit }: WaitlistFormProps) {
                     className="text-[var(--kyozo-teal)] border-[var(--kyozo-teal)] hover:bg-[var(--kyozo-teal)]/10 flex-shrink-0"
                   >
                     Fill Info
-                  </Button>
+                  </Button> */}
                 </div>
                 
                 <div className="space-y-4">
@@ -900,7 +883,7 @@ export function WaitlistForm({ onSubmit }: WaitlistFormProps) {
             {currentStep === 5 && (
               <div className="space-y-8">
                 <div className="flex items-center justify-end">
-                  <Button
+                  {/* <Button
                     type="button"
                     variant="outline"
                     size="sm"
@@ -908,29 +891,35 @@ export function WaitlistForm({ onSubmit }: WaitlistFormProps) {
                     className="text-[var(--kyozo-teal)] border-[var(--kyozo-teal)] hover:bg-[var(--kyozo-teal)]/10"
                   >
                     Fill Info
-                  </Button>
+                  </Button> */}
                 </div>
                 {/* About Kyozo */}
                 <div className="space-y-4 p-6 bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl border border-purple-100">
-                  <h2 className="text-2xl md:text-3xl text-[var(--kyozo-secondary)] font-semibold">About Kyozo</h2>
+                  <h2 className="text-2xl md:text-3xl text-[var(--kyozo-secondary)] font-semibold text-center">Kyozo's Vision</h2>
                   <div className="space-y-3 text-muted-foreground leading-relaxed">
                     <p>
                       Kyozo gives creatives control.
                     </p>
                     <p>
-                      Sharing work, building relationships, and engaging audiences on your terms.
+                      Share work, build meaningful communities, and engage audiences on your terms.
                     </p>
                     <p>
-                      Express yourself across multiple formats, distribute on your own terms, connect with trusted witnesses who truly value what you create and whose feedback you seek.
+                      Express yourself across multiple formats, distribute how you want, and connect with humans who truly value what you create.
                     </p>
                     <p>
-                      Built by creative professionals for creative professionals: Kyozo places creative work at the centre of our universe, challenging the extraction economy many social media platforms of today rely on.
+                      Built by creative professionals for creative professionals: Kyozo is anti-"extraction economy", anti-"social economy", and anti-"algorithm tyranny".
                     </p>
                     <p>
-                      No need to leave your existing platforms, Kyozo integrates, making your life easier, not forcing replacement. Kyozo makes community management seamless, helping you understand your audience, connect authentically, and transform how you approach creative collaboration.
+                      Kyozo is on a mission to make creative life easier, integrating existing platforms to turbocharge your workflow rather than forcing replacement. We make community management seamless, helping you understand your audience, connect authentically, and transform how you approach creative organizing.
                     </p>
                     <p>
-                      Kyozo support the building of communities rooted in shared creative interests, free from algorithms and social pressures. Whether you're an individual artist, community leader, or large-scale organizer, Kyozo provides the foundation for authentic creative flourishing.
+                      Kyozo promotes artists and creatives. We support the building of communities rooted in shared creative interests, free from algorithms and social pressures.
+                    </p>
+                    <p>
+                      Whether you're an individual artist, community leader, or large-scale organizer, Kyozo provides the foundation for authentic creative flourishing.
+                    </p>
+                    <p>
+                      We are excited to have you as part of our founding community of creative leaders!
                     </p>
                   </div>
                 </div>
@@ -985,13 +974,13 @@ export function WaitlistForm({ onSubmit }: WaitlistFormProps) {
                     
                     <div className="space-y-2">
                       {[
-                        { value: "gives-control", label: "Kyozo gives creatives control" },
-                        { value: "sharing-on-terms", label: "Sharing work, building relationships, and engaging audiences on your terms" },
-                        { value: "express-distribute", label: "Express yourself across multiple formats, distribute on your own terms" },
-                        { value: "trusted-witnesses", label: "Connect with trusted witnesses who truly value what you create and whose feedback you seek" },
-                        { value: "creative-centre", label: "Kyozo places creative work at the centre of our universe, challenging the extraction economy many social media platforms of today rely on" },
-                        { value: "integrates", label: "Kyozo integrates, making your life easier, not forcing replacement" },
-                        { value: "communities", label: "Support the building of communities rooted in shared creative interests, free from algorithms and social pressures" },
+                        { value: "control", label: "Kyozo gives creatives control" },
+                        { value: "communities-on-terms", label: "Share work, build meaningful communities, and engage audiences on your terms" },
+                        { value: "expression", label: "Express yourself across multiple formats, distribute on your own terms" },
+                        { value: "anti-economy", label: "Built by creative professionals for creative professionals: anti-\"extraction economy\", anti-\"social economy\", and anti-\"algorithm tyranny\"" },
+                        { value: "integration", label: "Integrating existing platforms to turbocharge your workflow rather than forcing replacement, making community management seamless" },
+                        { value: "community", label: "Support the building of communities rooted in shared creative interests, free from algorithms and social pressures" },
+                        { value: "foundation", label: "Provides the foundation for authentic creative flourishing for individual artists, community leaders, or large-scale organizers" },
                         { value: "all", label: "All of the above—this entire vision speaks to me" },
                       ].map((reason) => (
                         <div
@@ -1031,7 +1020,7 @@ export function WaitlistForm({ onSubmit }: WaitlistFormProps) {
                   <h2 className="text-3xl md:text-4xl mb-3">
                     Kyozo is an eco-system of creative communities. Would you like to join any of these beta-communities?
                   </h2>
-                  <Button
+                  {/* <Button
                     type="button"
                     variant="outline"
                     size="sm"
@@ -1039,7 +1028,7 @@ export function WaitlistForm({ onSubmit }: WaitlistFormProps) {
                     className="text-[var(--kyozo-teal)] border-[var(--kyozo-teal)] hover:bg-[var(--kyozo-teal)]/10 flex-shrink-0"
                   >
                     Fill Info
-                  </Button>
+                  </Button> */}
                 </div>
 
                 <div className="space-y-4">

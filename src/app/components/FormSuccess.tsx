@@ -1,5 +1,4 @@
 import { motion } from "motion/react";
-import { CheckCircle2, Sparkles } from "lucide-react";
 
 export function FormSuccess() {
   return (
@@ -15,13 +14,25 @@ export function FormSuccess() {
         transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
         className="mb-6"
       >
-        <div className="relative">
-          <div className="w-24 h-24 bg-[var(--kyozo-dark)] rounded-full flex items-center justify-center">
-            <CheckCircle2 className="w-12 h-12 text-white" />
-          </div>
-          <div className="absolute -top-2 -right-2 w-8 h-8 bg-[var(--kyozo-secondary)] rounded-full flex items-center justify-center">
-            <Sparkles className="w-4 h-4 text-white" />
-          </div>
+        <div className="w-24 h-24 bg-gradient-to-br from-[#D4A540]/20 to-[#048B9A]/20 rounded-full flex items-center justify-center border-2 border-[#D4A540]/40">
+          {/* Subtle earthy checkmark */}
+          <svg 
+            className="w-12 h-12" 
+            viewBox="0 0 24 24" 
+            fill="none" 
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <motion.path
+              initial={{ pathLength: 0, opacity: 0 }}
+              animate={{ pathLength: 1, opacity: 1 }}
+              transition={{ delay: 0.4, duration: 0.6, ease: "easeInOut" }}
+              d="M5 13l4 4L19 7"
+              stroke="#D4A540"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
         </div>
       </motion.div>
 

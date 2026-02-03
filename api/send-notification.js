@@ -50,7 +50,7 @@ export default async function handler(req, res) {
 
     // Send email notification
     const { data, error } = await resend.emails.send({
-      from: 'Kyozo Waitlist <waitlist@kyozo.com>',
+      from: 'Kyozo Waitlist <waitlist@contact.kyozo.com>',
       to: ['dev@kyozo.com'],
       subject: `New Waitlist Submission from ${formData.firstName} ${formData.lastName}`,
       html: `

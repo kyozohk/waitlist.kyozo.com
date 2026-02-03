@@ -1,10 +1,9 @@
 import { motion } from "motion/react";
 import { useState } from "react";
+import { Routes, Route, useNavigate } from "react-router-dom";
 import { WaitlistForm } from "./components/WaitlistForm";
 import { AdminLogin } from "./components/AdminLogin";
 import { AdminDashboard } from "./components/AdminDashboard";
-import { Shield } from "lucide-react";
-import kyozoLogo from "/logo.png";
 
 interface FormSubmission {
   id: string;
@@ -37,245 +36,101 @@ interface FormSubmission {
   communitySelections: string[];
 }
 
-export default function App() {
-  const [showAdminLogin, setShowAdminLogin] = useState(false);
-  const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(false);
-  const [submissions, setSubmissions] = useState<FormSubmission[]>([
-    {
-      id: "1",
-      timestamp: "2026-01-18T14:32:00.000Z",
-      firstName: "Sarah",
-      lastName: "Chen",
-      email: "sarah.chen@example.com",
-      phone: "+1 415 555 0123",
-      location: "San Francisco, USA",
-      roleTypes: ["Artist / Musician / Performer"],
-      creativeWork: "I'm a visual artist and photographer focusing on urban landscapes and street photography. I've been building my portfolio over the past 5 years and now have a growing Instagram following of around 15K. I'm looking for better ways to connect with my audience and monetize my work beyond just sponsored posts.",
-      segments: ["artist"],
-      artistQuestions: {
-        q1: "strongly-agree",
-        q2: "agree",
-        q3: "strongly-agree",
-        q4: "agree",
-        q5: "strongly-agree"
-      },
-      communityQuestions: {
-        q1: "",
-        q2: "",
-        q3: "",
-        q4: "",
-        q5: ""
-      },
-      productFeedbackSurvey: "yes",
-      resonanceLevel: "5",
-      resonanceReasons: ["control", "relationships", "freedom"],
-      communitySelections: ["asia"]
-    },
-    {
-      id: "2",
-      timestamp: "2026-01-17T09:15:00.000Z",
-      firstName: "Marcus",
-      lastName: "Johnson",
-      email: "marcus@creativecollective.org",
-      phone: "+44 20 7946 0958",
-      location: "London, UK",
-      roleTypes: ["Community Builder"],
-      creativeWork: "I run a creative collective of over 500 designers, artists, and makers in London. We organize monthly meetups, workshops, and collaborative projects. Managing everything across Discord, Eventbrite, Mailchimp, and Stripe has become overwhelming.",
-      segments: ["community"],
-      artistQuestions: {
-        q1: "",
-        q2: "",
-        q3: "",
-        q4: "",
-        q5: ""
-      },
-      communityQuestions: {
-        q1: "strongly-agree",
-        q2: "strongly-agree",
-        q3: "agree",
-        q4: "strongly-agree",
-        q5: "agree"
-      },
-      productFeedbackSurvey: "yes",
-      resonanceLevel: "4",
-      resonanceReasons: ["community-tools", "long-term"],
-      communitySelections: ["willer"]
-    },
-    {
-      id: "3",
-      timestamp: "2026-01-16T16:45:00.000Z",
-      firstName: "Aisha",
-      lastName: "Patel",
-      email: "aisha.patel@designstudio.com",
-      phone: "+65 9123 4567",
-      location: "Singapore",
-      roleTypes: ["Creative Professional", "Community Builder"],
-      creativeWork: "I'm a freelance illustrator specializing in children's book illustrations, and I also run a small online community for Asian illustrators. We have about 200 active members who share work, give feedback, and collaborate on projects.",
-      segments: ["artist", "community"],
-      artistQuestions: {
-        q1: "agree",
-        q2: "strongly-agree",
-        q3: "agree",
-        q4: "strongly-agree",
-        q5: "agree"
-      },
-      communityQuestions: {
-        q1: "agree",
-        q2: "agree",
-        q3: "strongly-agree",
-        q4: "agree",
-        q5: "strongly-agree"
-      },
-      productFeedbackSurvey: "yes",
-      resonanceLevel: "5",
-      resonanceReasons: ["all"],
-      communitySelections: ["asia", "willer"]
-    },
-    {
-      id: "4",
-      timestamp: "2026-01-15T11:20:00.000Z",
-      firstName: "Diego",
-      lastName: "Rodriguez",
-      email: "diego.r@musiclabel.com",
-      phone: "+34 91 123 4567",
-      location: "Madrid, Spain",
-      roleTypes: ["Artist / Musician / Performer", "Catalyst"],
-      creativeWork: "Independent electronic music producer and DJ. I release my own tracks and run a small record label supporting emerging artists. Looking for new ways to engage with fans beyond streaming platforms and build a sustainable income from my music.",
-      segments: ["artist"],
-      artistQuestions: {
-        q1: "strongly-agree",
-        q2: "strongly-agree",
-        q3: "neutral",
-        q4: "disagree",
-        q5: "agree"
-      },
-      communityQuestions: {
-        q1: "",
-        q2: "",
-        q3: "",
-        q4: "",
-        q5: ""
-      },
-      productFeedbackSurvey: "no",
-      resonanceLevel: "2",
-      resonanceReasons: ["control"],
-      communitySelections: []
-    },
-    {
-      id: "5",
-      timestamp: "2026-01-14T08:30:00.000Z",
-      firstName: "Emma",
-      lastName: "Williams",
-      email: "emma@craftcommunity.co",
-      phone: "+61 2 9876 5432",
-      location: "Sydney, Australia",
-      roleTypes: ["Community Builder", "Explorer"],
-      creativeWork: "I manage a craft and maker community with over 1,000 members across Australia. We offer online courses, host maker markets, and run a membership program. The technical overhead of managing multiple platforms is eating into my creative time.",
-      segments: ["community"],
-      artistQuestions: {
-        q1: "",
-        q2: "",
-        q3: "",
-        q4: "",
-        q5: ""
-      },
-      communityQuestions: {
-        q1: "strongly-agree",
-        q2: "strongly-agree",
-        q3: "strongly-agree",
-        q4: "strongly-agree",
-        q5: "strongly-agree"
-      },
-      productFeedbackSurvey: "yes",
-      resonanceLevel: "4",
-      resonanceReasons: ["community-tools", "safe-space", "freedom"],
-      communitySelections: ["willer"]
-    }
-  ]);
-
+// Main waitlist page component
+function WaitlistPage() {
   const handleFormSubmit = (formData: FormSubmission) => {
-    setSubmissions((prev) => [...prev, formData]);
-  };
-
-  const handleAdminAccess = () => {
-    setShowAdminLogin(true);
-  };
-
-  const handleAdminAuthenticate = () => {
-    setIsAdminAuthenticated(true);
-    setShowAdminLogin(false);
-  };
-
-  const handleAdminClose = () => {
-    setIsAdminAuthenticated(false);
+    console.log('Form submitted:', formData);
   };
 
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
-      {/* Show Admin Dashboard in full screen when authenticated */}
-      {isAdminAuthenticated ? (
-        <AdminDashboard onClose={handleAdminClose} />
-      ) : (
-        <>
-          {/* Decorative Background Elements */}
-          <div className="absolute inset-0 pointer-events-none overflow-hidden">
-            {/* Top right soft blue gradient blob */}
-            <div className="absolute -top-20 -right-20 w-96 h-96 bg-gradient-to-br from-cyan-200/40 to-blue-300/30 rounded-full blur-3xl" />
-            
-            {/* Bottom left pink gradient blob */}
-            <div className="absolute -bottom-32 -left-32 w-[500px] h-[500px] bg-gradient-to-tr from-pink-200/40 to-purple-300/30 rounded-full blur-3xl" />
-            
-            {/* Middle right accent */}
-            <div className="absolute top-1/2 -right-40 w-80 h-80 bg-gradient-to-bl from-purple-200/30 to-pink-200/20 rounded-full blur-3xl" />
-          </div>
+      {/* Decorative Background Elements */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute -top-20 -right-20 w-96 h-96 bg-gradient-to-br from-cyan-200/40 to-blue-300/30 rounded-full blur-3xl" />
+        <div className="absolute -bottom-32 -left-32 w-[500px] h-[500px] bg-gradient-to-tr from-pink-200/40 to-purple-300/30 rounded-full blur-3xl" />
+        <div className="absolute top-1/2 -right-40 w-80 h-80 bg-gradient-to-bl from-purple-200/30 to-pink-200/20 rounded-full blur-3xl" />
+      </div>
 
-          {/* Header */}
-          <motion.header
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="py-6 px-6 relative z-10"
-          >
-            <div className="max-w-6xl mx-auto">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <img src={kyozoLogo} alt="Kyozo" className="h-32" />
-                </div>
-                <button
-                  className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
-                  onClick={handleAdminAccess}
-                >
-                  <Shield className="w-4 h-4" />
-                  Admin
-                </button>
-              </div>
+      {/* Header */}
+      <motion.header
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+        className="py-6 px-6 relative z-10 pt-[48px] pr-[24px] pb-[24px] pl-[24px]"
+      >
+        <div className="max-w-6xl mx-auto">
+          <div className="flex items-center justify-center">
+            <div className="w-[157px] h-[41px]" role="img" aria-label="Kyozo">
+              <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[157px] h-[41px]" role="img" aria-label="Kyozo">
+                    <svg className="w-full h-full" viewBox="0 0 157 41" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <g clipPath="url(#clip0_2004_179)">
+                        <path d="M17.3353 0.00172391C17.6114 0.00172394 17.8452 0.0235387 18.0721 0.0700339C18.6197 0.182541 18.9993 0.592382 19.0868 1.16525C19.1376 1.49703 19.0856 1.82536 19.0479 2.0653C19.0479 2.0653 19.0387 2.12443 19.0353 2.14624C18.9919 2.43669 18.9233 2.71681 18.8575 2.98832C18.7998 3.22654 18.7449 3.45155 18.7118 3.66279C18.6398 4.11913 18.5683 5.32399 18.5392 5.84347C18.5786 5.84347 18.6203 5.84347 18.6649 5.84347C18.7392 5.84347 18.813 5.84347 18.8873 5.84347C18.9599 5.84347 19.0319 5.84347 19.1039 5.84347C19.2291 5.84347 19.3937 5.84289 19.5572 5.83715C20.17 5.81592 20.8079 5.78779 21.3709 5.76368L21.3806 5.76368C22.3249 5.72235 23.3018 5.67988 24.2615 5.65864C24.5776 5.65175 24.9217 5.64831 25.3144 5.64831C25.73 5.64831 26.1513 5.65232 26.5588 5.65577L26.5708 5.65577C26.9733 5.65921 27.39 5.66323 27.7952 5.66323C28.5629 5.66323 29.1745 5.64945 29.7204 5.61961C30.0702 5.60066 30.4098 5.50997 30.7693 5.41411C31.1174 5.32112 31.4758 5.22583 31.8668 5.18852C31.9685 5.17876 32.0594 5.17417 32.1446 5.17417C32.8082 5.17417 33.1318 5.49964 33.2867 5.77229C33.461 6.07939 33.485 6.41863 33.4982 6.6006C33.541 7.20044 33.5633 8.40243 33.4942 9.09813C33.433 9.71061 33.074 10.3656 32.2498 10.3656C31.9743 10.3656 31.721 10.2875 31.4975 10.2192C31.4021 10.1899 31.3118 10.1618 31.2432 10.148C30.1611 9.92816 28.9682 9.83 27.3751 9.83C26.6903 9.83 25.9918 9.84779 25.3167 9.86502L25.2956 9.86502C24.9469 9.8742 24.5994 9.88338 24.2541 9.8897C22.4089 9.92414 20.5941 9.98097 18.7061 10.0636C18.6701 10.0653 18.6335 10.0659 18.5957 10.0659C18.5752 10.0659 18.5546 10.0659 18.534 10.0653L18.534 14.3745C19.0862 14.3527 19.6475 14.3268 20.1499 14.3033C21.5304 14.2396 22.9565 14.1736 24.3679 14.1707L24.393 14.1707C24.8131 14.1707 25.2453 14.1908 25.6637 14.2103C26.0793 14.2293 26.5068 14.2493 26.9161 14.2493C27.4963 14.2493 27.9553 14.2097 28.3611 14.1254C28.4457 14.1076 28.5823 14.0565 28.7029 14.0106C28.9756 13.9072 29.2848 13.7907 29.6175 13.7907C30.16 13.7907 30.7762 14.1328 30.8785 15.092C30.9431 15.6936 30.9797 16.7549 30.9311 17.3771C30.8362 18.5998 30.0325 18.7467 29.6907 18.7536L29.6181 18.7548L29.5461 18.7427C28.0839 18.5016 26.4977 18.3897 24.5553 18.3897C23.3041 18.3897 22.0711 18.4351 20.7038 18.489C20.4689 18.4982 20.2345 18.5068 19.9996 18.516L19.9402 18.5183C19.4629 18.5361 18.9713 18.5539 18.4831 18.5774L18.4551 22.2276C18.9713 22.2075 19.4743 22.1914 19.9082 22.1776C20.1094 22.1713 20.3329 22.1684 20.5918 22.1684C20.9525 22.1684 21.3252 22.1742 21.7196 22.1805C22.1214 22.1868 22.5358 22.1931 22.9423 22.1931C23.7385 22.1931 24.7474 22.1719 25.4865 22.0071C25.5299 21.9974 25.6443 21.9566 25.7357 21.9239C26.041 21.8149 26.4194 21.6794 26.7983 21.6794C27.3597 21.6794 27.8084 21.9968 27.9696 22.5071L27.997 22.5938L28.2051 25.1378L28.1673 25.2664C28.1645 25.2894 28.1611 25.3301 28.1588 25.3594C28.1353 25.632 28.0805 26.2715 27.4557 26.5235C27.3008 26.5861 27.1224 26.6165 26.9109 26.6165C26.572 26.6165 26.1701 26.539 25.8157 26.4707C25.6597 26.4403 25.4985 26.4093 25.4116 26.4001C24.8017 26.3329 24.1449 26.3013 23.3441 26.3013C22.7136 26.3013 22.0683 26.3214 21.4446 26.3404C21.1908 26.3484 20.9411 26.3559 20.693 26.3622C20.474 26.3679 20.2557 26.372 20.0368 26.3765C19.4983 26.3875 18.9433 26.3984 18.398 26.4311L18.3688 30.0497C18.382 30.0497 18.3957 30.0497 18.4088 30.0497C18.7135 30.0456 19.0284 30.0411 19.3303 30.0273C20.0791 29.9934 20.9285 29.9544 21.6801 29.8086C21.7424 29.7965 21.827 29.7684 21.9162 29.7385C22.1054 29.6754 22.3398 29.5973 22.5959 29.5973C22.8234 29.5973 23.5807 29.6771 23.7785 30.7006C23.8974 31.3177 23.9323 32.4536 23.8826 33.019C23.8345 33.5678 23.5087 34.2205 22.7485 34.2543C22.7268 34.2555 22.7039 34.256 22.6805 34.256C22.4232 34.256 22.134 34.1941 21.8276 34.1292C21.6287 34.0867 21.4041 34.0385 21.2766 34.031C21.148 34.0236 21.0148 34.0201 20.8696 34.0201C20.4758 34.0201 20.0608 34.0483 19.6595 34.0758C19.416 34.0924 19.1673 34.1091 18.921 34.1206C18.7301 34.1292 18.5454 34.1298 18.3665 34.1309C18.3665 34.1309 18.3397 34.1309 18.3299 34.1309C18.3288 34.4483 18.3214 34.7646 18.3139 35.0729C18.2928 35.9557 18.2711 36.8678 18.4111 37.6823C18.4265 37.7713 18.47 37.9361 18.5123 38.0951C18.7141 38.8545 18.8324 39.386 18.654 39.8412C18.4837 40.2763 18.0653 40.5696 17.5348 40.6265C17.1439 40.6684 16.6191 40.6936 16.1321 40.6936C15.8692 40.6936 15.6348 40.6862 15.4353 40.6718L15.4119 40.6701C15.0815 40.6465 14.2029 40.5846 13.9777 39.7276C13.8771 39.3447 13.9686 38.8901 14.1086 38.2896C14.1429 38.1427 14.1755 38.0038 14.1881 37.9228C14.343 36.9132 14.3327 35.8897 14.3224 34.8065L14.3224 34.7841C14.3207 34.6137 14.319 34.4415 14.3178 34.2675C13.9926 34.2652 13.6656 34.256 13.3484 34.2469C13.002 34.2365 12.6441 34.2262 12.3017 34.2262C12.0011 34.2262 11.7387 34.2342 11.5009 34.2509C11.3637 34.2606 11.1637 34.2939 10.907 34.3502C10.8299 34.3668 10.7298 34.4001 10.6235 34.4351C10.3783 34.5161 10.1005 34.6079 9.8021 34.6079C9.25907 34.6079 8.64402 34.2721 8.5457 33.3302C8.4874 32.7728 8.48454 31.6351 8.54056 31.076C8.62973 30.1748 9.23735 29.8539 9.7758 29.8539C10.0479 29.8539 10.3045 29.9285 10.5315 29.9946C10.6469 30.0284 10.7555 30.06 10.8321 30.0715C11.2786 30.1398 11.7696 30.1702 12.4246 30.1702C12.747 30.1702 13.0809 30.1627 13.4038 30.1559C13.7085 30.149 14.0211 30.1421 14.3304 30.1409L14.3567 26.5987L9.96844 26.7072C9.62662 26.7382 9.29622 26.7479 8.97612 26.7577C8.47139 26.7726 7.99581 26.7864 7.53109 26.8823C7.45107 26.8989 7.2773 26.9603 7.13725 27.0103C6.74341 27.1497 6.48562 27.2347 6.22611 27.2347C5.61106 27.233 5.07603 26.7606 4.98057 26.1349C4.87425 25.438 4.87254 24.0845 4.97771 23.4026C5.08689 22.6954 5.5779 22.2563 6.25983 22.2563C6.52335 22.2563 6.77314 22.3188 6.99378 22.3745C7.10639 22.4026 7.21328 22.4296 7.28702 22.4388C7.97752 22.5249 8.77492 22.5668 9.72493 22.5668C10.6749 22.5668 11.7301 22.522 12.7087 22.4784C13.038 22.4641 13.3609 22.4497 13.6753 22.4371C13.9228 22.4273 14.1726 22.421 14.4161 22.4153L14.443 18.7944C13.5336 18.8403 12.6704 18.8472 11.9359 18.8472C11.5278 18.8472 11.1134 18.8449 10.7121 18.842L10.699 18.842C10.3177 18.8397 9.88555 18.8369 9.47228 18.8369C8.54513 18.8369 7.8369 18.8506 7.1767 18.8816C6.63024 18.9069 6.12722 19.0125 5.59505 19.1239C5.19778 19.2071 4.78794 19.2932 4.35237 19.3454C4.23748 19.3592 4.11344 19.3724 3.98654 19.3724C3.3269 19.3724 2.85761 18.9832 2.73129 18.3312C2.60211 17.6642 2.62897 16.0024 2.78102 15.317C2.83761 15.061 3.09426 14.2264 4.0197 14.2258C4.28835 14.2258 4.54043 14.3044 4.74278 14.367C4.83767 14.3969 4.92741 14.4244 4.99372 14.437C5.97803 14.623 7.15783 14.7097 8.70575 14.7097C9.68492 14.7097 10.6612 14.6753 11.6055 14.642L11.633 14.6408C11.9616 14.6293 12.2835 14.6179 12.5944 14.6087C12.8859 14.6001 13.1877 14.5943 13.4541 14.5892C13.7965 14.5828 14.1469 14.576 14.4956 14.5633L14.4956 10.2123L5.40128 10.4126C5.21893 10.4293 5.03659 10.4442 4.85368 10.4591L4.83767 10.4603C4.02541 10.5269 1.66238 10.6704 1.37372 10.6704C0.742088 10.6704 0.27051 10.2777 0.112174 9.62048C0.0281476 9.27148 0.0241457 9.08435 0.0138568 8.58554C0.0138568 8.58554 0.00985567 8.39037 0.00871246 8.3433L0.005853 8.23252C-0.0215842 7.31065 0.0407211 6.88932 0.260791 6.49784C0.391118 6.26594 0.715222 5.87676 1.4183 5.87676C1.52805 5.87676 3.42808 5.98181 3.7419 6.01338C4.86397 6.12761 6.0129 6.1431 6.98921 6.1431C7.34303 6.1431 7.69686 6.14081 8.05012 6.13851L8.07527 6.13851C8.42338 6.13622 8.77091 6.13392 9.11845 6.13392C9.49857 6.13392 9.83182 6.13679 10.1376 6.14196L14.4664 5.99329C14.4504 5.81534 14.4287 5.57311 14.4127 5.38426C14.3824 5.02492 14.2898 3.93085 14.1943 3.43318C14.0795 2.83391 13.96 2.21455 13.9331 1.59174C13.9097 1.05848 14.0457 0.652656 14.3373 0.386313C14.6208 0.127432 15.03 0.021812 15.7503 0.021812C15.904 0.021812 16.0504 0.0264042 16.1801 0.0298483L16.2007 0.0298483C16.2824 0.0327183 16.3562 0.0350166 16.4162 0.0350166L16.4419 0.0350166C16.558 0.0327206 16.6797 0.0264065 16.8089 0.0189443C16.9769 0.00976007 17.1507 -3.7928e-07 17.3348 -3.63112e-07L17.3353 0.00172391Z" fill="#3F3F3F" />
+                        <path d="M145.6 10.8583C142.334 11.0971 138.381 12.456 136.605 15.3908C135.073 17.2397 134.191 19.6963 134.153 22.0994C134.323 23.3717 134.446 24.6583 134.67 25.9225C135.412 28.4957 137.527 30.5235 139.604 32.0881C142.991 33.6914 147.293 34.3428 150.716 32.512C161.561 26.7547 157.403 11.511 145.601 10.8589L145.6 10.8583ZM145.591 29.0717C143.303 29.2961 140.766 28.0195 139.921 25.8003C139.422 24.0991 138.722 22.297 139.361 20.5379C139.66 18.6958 140.714 17.1755 142.344 16.2747C143.477 15.4949 144.357 15.2349 145.71 15.4637C148.227 15.6956 151.001 16.8638 151.578 19.596C153.197 24.4638 151.107 29.053 145.591 29.0717H145.591Z" fill="#3F3F3F" />
+                        <path d="M123.342 28.2358C123.342 28.2358 124.337 26.332 125.086 25.4643C126.388 23.9539 127.292 22.2621 128.325 20.5746C129.043 19.4015 130.948 17.3375 130.562 15.8047C130.395 15.1433 129.847 14.6857 129.425 14.1179C128.391 12.7247 127.899 11.8601 126.078 11.7372C124.07 11.602 122.072 11.7834 120.066 11.8195C119.136 11.8364 116.787 11.3788 116.137 12.1574C115.653 12.7359 115.865 13.7769 115.82 14.5012C115.786 16.6194 115.993 16.746 118.056 16.5321C125.79 16.4661 125.455 15.8982 121.194 22.3469C120.354 23.6079 115.436 28.1703 115.92 29.2101C116.143 29.7923 118.232 32.8262 118.232 32.8262C118.232 32.8262 118.366 33.1796 120.184 33.0338C123.388 33.2064 126.581 32.8181 129.779 33.0625C131.049 33.1859 132.41 33.3093 132.285 31.5265C132.158 30.5503 132.647 29.1577 131.84 28.4259C130.86 27.9789 129.668 28.4303 128.614 28.3218C127.307 28.3486 126.022 28.285 124.716 28.2931C124.133 28.2969 123.342 28.2351 123.342 28.2351V28.2358Z" fill="#3F3F3F" />
+                        <path d="M101.438 10.8789C96.0586 10.5903 90.8242 15.465 90.0708 20.68C88.9945 28.1267 96.6639 35.8289 104.13 33.247C107.759 32.6124 110.84 29.879 112.01 26.3732C113.768 22.7477 112.61 18.2732 110.362 15.1177C108.238 12.2995 104.854 11.0622 101.438 10.8789ZM101.445 29.0337C99.8183 28.8566 97.9892 28.5206 96.7432 27.3824C95.4006 25.579 94.5251 22.9952 95.141 20.7554C96.1329 18.1697 97.6646 15.2462 100.844 15.5441C104.164 15.0747 107.21 17.1499 107.734 20.5591C107.892 22.8125 107.72 25.3583 106.136 27.12C105.056 28.7793 103.313 29.1066 101.445 29.033V29.0337Z" fill="#3F3F3F" />
+                        <path d="M83.4615 12.0652C83.1852 12.3625 83.1399 12.9229 83.0724 13.3387C82.9491 14.1459 82.7186 14.9519 82.5724 15.7629C82.0215 18.0102 81.1659 20.1788 80.4862 22.3918C79.9193 24.3105 78.7507 26.0116 78.4266 26.0116C78.1026 26.0116 75.0839 21.2641 74.0981 19.6153C73.2697 18.2938 72.818 16.7697 72.2133 15.3366C71.5813 13.3281 71.7468 11.5808 69.0633 11.6026C65.0607 11.3271 65.6214 12.2397 66.9635 15.4033C67.3563 16.6855 67.7479 17.9353 68.373 19.1359C70.1984 22.6417 71.5689 26.1431 74.0517 29.2893C74.4079 29.7406 74.7803 30.19 75.0046 30.7199C75.5796 32.0763 74.6415 33.2146 73.758 34.1272C72.6588 35.2629 71.4871 36.1805 70.6395 37.5176C70.5323 37.6866 70.4239 37.868 70.4202 38.0687C70.4072 38.7413 71.8515 39.5872 72.2839 39.9575C72.8094 40.4069 73.209 41.0147 73.8893 40.9997C74.9606 40.7173 75.7859 39.5454 76.5077 38.727C77.9167 36.8899 79.3486 35.0653 80.8431 33.2993C82.5835 30.7274 83.7793 28.1329 85.0353 24.9556C86.1332 21.1357 87.8997 17.5077 88.7027 13.6017C89.3241 10.9649 87.4963 11.5403 85.6332 11.741C84.938 11.8488 84.0241 11.5777 83.4609 12.0645L83.4615 12.0652Z" fill="#3F3F3F" />
+                        <path d="M58.3177 18.0014C58.2991 17.6829 58.6423 17.3563 58.8604 17.1175C59.516 16.357 60.1554 15.5853 60.85 14.8591C61.4962 14.0263 62.1152 13.156 62.7589 12.3164C63.3426 11.4144 63.8854 10.4881 64.5657 9.65088C65.7101 8.16915 66.3774 7.19733 63.8135 7.4448C62.7354 7.50776 61.6356 7.39119 60.5643 7.49654C59.8084 7.62308 59.4683 8.35491 59.0643 8.92965C58.8096 9.28995 58.5289 9.63156 58.2613 9.98188C56.7265 12.12 55.4087 14.4389 53.3671 16.15C52.9749 16.5191 52.5467 16.8931 52.1849 17.3089C51.8038 17.7078 51.4798 18.3412 50.9271 18.3268C50.3081 18.1778 50.6105 17.2316 50.67 16.7584C50.7499 16.2953 50.7908 15.8253 50.8224 15.3902C50.9742 13.9957 50.6161 12.6249 50.6483 11.2342C50.5374 7.64116 52.0188 7.01032 47.5757 7.43171C46.9834 7.49155 46.1426 7.28709 45.6611 7.61249C45.259 7.94848 45.3966 8.6454 45.3798 9.13972C45.3817 9.53182 45.3328 9.95508 45.3309 10.3341C45.5329 12.3307 45.4976 14.3167 45.4145 16.3184C45.5329 18.8561 45.5855 21.4025 45.3774 23.9346C45.3972 25.5416 45.2937 27.1362 45.4226 28.7444C45.4926 29.8646 45.2788 30.9879 45.2454 32.1044C45.2522 33.4278 46.6252 33.1529 47.5181 33.0444C48.2548 32.974 48.984 33.0319 49.7139 33.1323C51.3986 33.3492 50.7716 31.6188 50.7369 30.594C50.6532 29.3173 50.647 28.0793 50.7369 26.8064C50.7065 25.6601 50.5696 24.8422 51.6279 24.1035C52.5449 23.4926 53.5846 21.7915 54.6726 21.7522C56.3436 22.0664 58.2662 24.9108 59.016 26.3744C59.6145 27.5083 60.1585 28.6971 60.4801 29.945C60.6343 30.584 60.6827 31.2485 60.7174 31.903C60.7285 32.4503 60.9658 33.045 61.5743 33.0537C62.3488 33.0774 63.1456 33.0519 63.9219 33.1211C64.4257 33.1286 65.0688 33.2308 65.4474 32.8343C65.6903 32.5607 65.689 32.0582 65.6432 31.6817C65.5007 30.306 65.36 28.9103 64.8792 27.6031C64.29 25.1265 62.8395 23.0089 61.2527 21.0702C60.4813 20.3016 59.6901 19.5268 58.8908 18.7838C58.6584 18.5855 58.3214 18.2913 58.3195 18.0095V18.0014H58.3177Z" fill="#3F3F3F" />
+                      </g>
+                      <defs>
+                        <clipPath id="clip0_2004_179">
+                          <rect width="157" height="41" fill="white" />
+                        </clipPath>
+                      </defs>
+                    </svg>
+                  </div>
             </div>
-          </motion.header>
+          </div>
+        </div>
+      </motion.header>
 
-          {/* Main Form */}
-          <main className="py-8 px-4 relative z-10">
-            <WaitlistForm onSubmit={handleFormSubmit} />
-          </main>
+      {/* Main Form */}
+      <main className="py-8 px-4 relative z-10 pt-[84px] pr-[16px] pb-[32px] pl-[16px]">
+        <WaitlistForm onSubmit={handleFormSubmit} />
+      </main>
 
-          {/* Admin Login */}
-          {showAdminLogin && (
-            <AdminLogin
-              onAuthenticate={handleAdminAuthenticate}
-              onCancel={() => setShowAdminLogin(false)}
-            />
-          )}
-
-          {/* Footer */}
-          <motion.footer
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.8, duration: 0.6 }}
-            className="py-12 text-center text-sm text-muted-foreground relative z-10"
-          >
-            <p>© 2026 Kyozo. Built for creatives, by creatives.</p>
-          </motion.footer>
-        </>
-      )}
+      {/* Footer */}
+      <motion.footer
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.8, duration: 0.6 }}
+        className="py-12 text-center text-sm text-muted-foreground relative z-10"
+      >
+        <p>© 2026 Kyozo. Built for creatives, by creatives.</p>
+      </motion.footer>
     </div>
+  );
+}
+
+// Admin page component
+function AdminPage() {
+  const navigate = useNavigate();
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  const handleAuthenticate = () => {
+    setIsAuthenticated(true);
+  };
+
+  const handleClose = () => {
+    navigate('/');
+  };
+
+  if (!isAuthenticated) {
+    return (
+      <AdminLogin
+        onAuthenticate={handleAuthenticate}
+        onCancel={() => navigate('/')}
+      />
+    );
+  }
+
+  return <AdminDashboard onClose={handleClose} />;
+}
+
+export default function App() {
+  return (
+    <Routes>
+      <Route path="/" element={<WaitlistPage />} />
+      <Route path="/admin" element={<AdminPage />} />
+    </Routes>
   );
 }
