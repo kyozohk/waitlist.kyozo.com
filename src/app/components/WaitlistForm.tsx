@@ -57,6 +57,7 @@ export function WaitlistForm({ onSubmit }: WaitlistFormProps) {
   const [requestCreativeWork, setRequestCreativeWork] = useState("");
   const [userId, setUserId] = useState<string | null>(null);
   const [isAuthenticating, setIsAuthenticating] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState<FormData>({
     firstName: "",
     lastName: "",
@@ -237,6 +238,13 @@ export function WaitlistForm({ onSubmit }: WaitlistFormProps) {
   };
 
   const handleSubmit = async () => {
+    // Prevent double submission
+    if (isSubmitting) {
+      console.log('Already submitting, ignoring duplicate call');
+      return;
+    }
+    setIsSubmitting(true);
+
     // If user is not authenticated yet, try to authenticate first
     let currentUserId = userId;
     if (!currentUserId) {
@@ -298,6 +306,7 @@ export function WaitlistForm({ onSubmit }: WaitlistFormProps) {
     } catch (error) {
       console.error('Error submitting form:', error);
       alert('Failed to submit form. Please try again.');
+      setIsSubmitting(false);
     }
   };
 
@@ -1150,9 +1159,10 @@ export function WaitlistForm({ onSubmit }: WaitlistFormProps) {
 
         <Button
           onClick={goToNext}
-          className="bg-gradient-to-r from-[var(--kyozo-primary)] to-[var(--kyozo-secondary)] hover:opacity-90 transition-opacity group px-8"
+          disabled={isSubmitting}
+          className="bg-gradient-to-r from-[var(--kyozo-primary)] to-[var(--kyozo-secondary)] hover:opacity-90 transition-opacity group px-8 disabled:opacity-50"
         >
-          {currentStep === TOTAL_STEPS ? "Submit" : "Next"}
+          {isSubmitting ? "Submitting..." : (currentStep === TOTAL_STEPS ? "Submit" : "Next")}
           <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
         </Button>
       </motion.div>
