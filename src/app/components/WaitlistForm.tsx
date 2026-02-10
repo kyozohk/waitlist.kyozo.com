@@ -573,10 +573,20 @@ export function WaitlistForm({ onSubmit }: WaitlistFormProps) {
       >
         <div>
           <h2 className="text-2xl md:text-3xl text-[var(--kyozo-teal)] mb-4 font-normal text-center">
-            You're Invited
+            Welcome—we're excited you're here!
           </h2>
           <p className="text-base leading-relaxed text-muted-foreground mb-6">
-            We're excited to invite you to be among the first to experience the reimagined Kyozo, and if you are willing to help us beta test, we will give you six months of premium access.
+            Kyozo is an operating system for creatives. It gives you control over what you create and how you share it, all integrated within our powerful community management platform.
+          </p>
+
+          <p className="text-base leading-relaxed text-muted-foreground mb-6">
+            We're looking for creatives from different sectors to be the first to experience Kyozo. You're one of the select few we're inviting to join our community of beta testers.
+          </p>
+          <p className="text-base leading-relaxed text-muted-foreground mb-6">
+            We have a few questions to help us understand your creative universe so we can get Kyozo to you at the right time.
+          </p>
+          <p className="text-base leading-relaxed text-muted-foreground mb-6">
+            Thank you for being part of this journey—we're excited to share Kyozo with you soon.
           </p>
         </div>
       </motion.div>
